@@ -43,45 +43,22 @@ class _ShowProfileState extends State<ShowProfile> {
     );
   }
 
-  Future<List<dynamic>> getNewChatList(String user, String chatID) async {
-    return await Firestore.instance
-        .collection('users')
-        .document(currentUserId)
-        .get()
-        .then((docs) {
-      List<dynamic> chatList = docs.data['chattingWith'];
-      List<dynamic> newChatList = [];
-      for (dynamic c in chatList) {
-        if (c['chatID'] != chatID) {
-          newChatList.add(c);
-        }
-      }
-      return newChatList;
-    });
-  }
-
   void unfriend() {
     removeData('users', currentUserId, 'friends', user.id);
     removeData('users', user.id, 'friends', currentUserId);
     String chatID = oneTooneCode(user.id, currentUserId);
-    getNewChatList(currentUserId, chatID).then(
-      (value) => Firestore.instance
-          .collection('users')
-          .document(currentUserId)
-          .updateData(
-        {
-          'chattingWith': value,
-        },
-      ),
-    );
-    getNewChatList(user.id, chatID).then(
-      (value) =>
-          Firestore.instance.collection('users').document(user.id).updateData(
-        {
-          'chattingWith': value,
-        },
-      ),
-    );
+    Firestore.instance
+        .collection('users')
+        .document(currentUserId)
+        .collection('chattingWith')
+        .document(chatID)
+        .delete();
+    Firestore.instance
+        .collection('users')
+        .document(user.id)
+        .collection('chattingWith')
+        .document(chatID)
+        .delete();
 
     Fluttertoast.showToast(msg: 'Removed from friend list.');
   }
@@ -92,32 +69,31 @@ class _ShowProfileState extends State<ShowProfile> {
     removeData('users', user.id, 'sentRequests', currentUserId);
     addData('users', user.id, 'friends', currentUserId);
     String chatID = oneTooneCode(user.id, currentUserId);
-    Firestore.instance.collection('users').document(currentUserId).updateData(
+    String now = DateTime.now().millisecondsSinceEpoch.toString();
+    Firestore.instance
+        .collection('users')
+        .document(currentUserId)
+        .collection('chattingWith')
+        .document(chatID)
+        .setData(
       {
-        'chattingWith': FieldValue.arrayUnion(
-          [
-            {
-              'chatID': chatID,
-              'lastMessage': '',
-              'lastSender': '',
-              'lastTime': DateTime.now().millisecondsSinceEpoch.toString(),
-            }
-          ],
-        ),
+        'chatID': chatID,
+        'message': '',
+        'senderid': '',
+        'timestamp': now,
       },
     );
-    Firestore.instance.collection('users').document(user.id).updateData(
+    Firestore.instance
+        .collection('users')
+        .document(user.id)
+        .collection('chattingWith')
+        .document(chatID)
+        .setData(
       {
-        'chattingWith': FieldValue.arrayUnion(
-          [
-            {
-              'chatID': chatID,
-              'lastMessage': '',
-              'lastSender': '',
-              'lastTime': DateTime.now().millisecondsSinceEpoch.toString(),
-            }
-          ],
-        ),
+        'chatID': chatID,
+        'message': '',
+        'senderid': '',
+        'timestamp': now,
       },
     );
     Fluttertoast.showToast(msg: 'Friend request accepted.');

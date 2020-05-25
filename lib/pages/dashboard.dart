@@ -1,4 +1,5 @@
 import 'package:chillzone/model/user.dart';
+import 'package:chillzone/pages/chat.dart';
 import 'package:flutter/material.dart';
 import 'package:chillzone/pages/login.dart';
 import 'package:chillzone/util/searchFriend.dart';
@@ -74,6 +75,11 @@ class _DashboardState extends State<Dashboard> {
         stream: Firestore.instance
             .collection('users')
             .document(currentUserId)
+            .collection('chattingWith')
+            .orderBy(
+              'timestamp',
+              descending: true,
+            )
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -83,13 +89,10 @@ class _DashboardState extends State<Dashboard> {
               ),
             );
           }
-          final data = snapshot.data;
-          List<dynamic> chattingWith = data['chattingWith'] ?? [];
-          chattingWith.sort(
-            (a, b) => b['lastTime'].compareTo(
-              a['lastTime'],
-            ),
-          );
+          final data = snapshot.data.documents;
+
+          List<dynamic> chattingWith = data;
+
           return Center(
             child: chattingWith.isEmpty
                 ? Column(
@@ -125,16 +128,13 @@ class _DashboardState extends State<Dashboard> {
                     itemCount: chattingWith.length,
                     itemBuilder: (_, int index) {
                       String chatID = chattingWith[index]['chatID'];
-                      String lastMessage = chattingWith[index]['lastMessage'];
-                      String lastSender = chattingWith[index]['lastSender'];
-                      print(currentUserId);
-                      print('ChatId: ' + chatID);
+                      String lastMessage = chattingWith[index]['message'];
+                      String lastSender = chattingWith[index]['senderid'];
                       String otherUserId = chatID
                           .split(currentUserId)
                           .where((element) => element.length > 0)
                           .toList()
                           .first;
-                      print(otherUserId);
                       return StreamBuilder(
                         stream: Firestore.instance
                             .collection('users')
@@ -154,7 +154,7 @@ class _DashboardState extends State<Dashboard> {
                               ? 'Start conversation..'
                               : lastSender == currentUserId
                                   ? 'You: $lastMessage'
-                                  : '${_user.name}: $lastMessage';
+                                  : '${_user.name.split(' ').toList().first}: $lastMessage';
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundImage: NetworkImage(_user.photoUrl),
@@ -175,7 +175,16 @@ class _DashboardState extends State<Dashboard> {
                               ),
                             ),
                             onTap: () {
-                              // Open chat..
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Chat(
+                                    senderUserId: currentUserId,
+                                    receiver: _user,
+                                    chatID: chatID,
+                                  ),
+                                ),
+                              );
                             },
                           );
                         },

@@ -1,13 +1,12 @@
 class User {
   String id, name, email, photoUrl, createdAt;
-  List<dynamic> chattingWith, friends, requests, sentRequests;
+  List<dynamic> friends, requests, sentRequests;
   User({
     this.id,
     this.name,
     this.email,
     this.photoUrl,
     this.createdAt,
-    this.chattingWith,
     this.friends,
     this.requests,
     this.sentRequests,

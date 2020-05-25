@@ -61,7 +61,6 @@ class _LoginState extends State<Login> {
             'id': firebaseUser.uid,
             'createdAt': DateTime.now().millisecondsSinceEpoch.toString(),
             'friends': [],
-            'chattingWith': [],
             'requests': [],
             'sentRequests': [],
           },
