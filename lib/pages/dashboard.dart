@@ -180,8 +180,10 @@ class _DashboardState extends State<Dashboard> {
                                 MaterialPageRoute(
                                   builder: (context) => Chat(
                                     senderUserId: currentUserId,
-                                    receiver: _user,
                                     chatID: chatID,
+                                    receiverId: _user.id,
+                                    receiverName: _user.name,
+                                    receiverPhotoUrl: _user.photoUrl,
                                   ),
                                 ),
                               );

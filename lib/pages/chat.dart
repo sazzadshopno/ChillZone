@@ -1,32 +1,36 @@
 import 'package:chillzone/model/message.dart';
-import 'package:chillzone/model/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class Chat extends StatefulWidget {
-  final String senderUserId, chatID;
-  final User receiver;
+  final String senderUserId, chatID, receiverName, receiverId, receiverPhotoUrl;
   Chat({
     @required this.senderUserId,
-    @required this.receiver,
     @required this.chatID,
+    @required this.receiverName,
+    @required this.receiverId,
+    @required this.receiverPhotoUrl,
   });
   @override
   _ChatState createState() => _ChatState(
         senderUserId: senderUserId,
-        receiver: receiver,
         chatID: chatID,
+        receiverName: receiverName,
+        receiverId: receiverId,
+        receiverPhotoUrl: receiverPhotoUrl,
       );
 }
 
 class _ChatState extends State<Chat> {
-  final String senderUserId, chatID;
-  final User receiver;
+  final String senderUserId, chatID, receiverName, receiverId, receiverPhotoUrl;
+
   _ChatState({
     @required this.senderUserId,
-    @required this.receiver,
     @required this.chatID,
+    @required this.receiverName,
+    @required this.receiverId,
+    @required this.receiverPhotoUrl,
   });
   TextEditingController _textEditingController = TextEditingController();
   @override
@@ -34,7 +38,7 @@ class _ChatState extends State<Chat> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          receiver.name,
+          receiverName,
         ),
         centerTitle: true,
       ),
@@ -117,7 +121,7 @@ class _ChatState extends State<Chat> {
                                 .add(
                               {
                                 'senderid': senderUserId,
-                                'receiverid': receiver.id,
+                                'receiverid': receiverId,
                                 'message': _textEditingController.text,
                                 'timestamp': now,
                               },
@@ -130,20 +134,20 @@ class _ChatState extends State<Chat> {
                                 .updateData(
                               {
                                 'senderid': senderUserId,
-                                'receiverid': receiver.id,
+                                'receiverid': receiverId,
                                 'message': _textEditingController.text,
                                 'timestamp': now,
                               },
                             );
                             Firestore.instance
                                 .collection('users')
-                                .document(receiver.id)
+                                .document(receiverId)
                                 .collection('chattingWith')
                                 .document(chatID)
                                 .updateData(
                               {
                                 'senderid': senderUserId,
-                                'receiverid': receiver.id,
+                                'receiverid': receiverId,
                                 'message': _textEditingController.text,
                                 'timestamp': now,
                               },
