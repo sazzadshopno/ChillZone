@@ -7,9 +7,9 @@ class Message {
     this.timestamp,
   });
   Message.fromJSON(data) {
-    this.senderID = data['senderid'];
-    this.receiverID = data['receiverid'];
-    this.message = data['message'];
-    this.timestamp = data['timestamp'];
+    this.senderID = data.data()['senderid'];
+    this.receiverID = data.data()['receiverid'];
+    this.message = data.data()['message'];
+    this.timestamp = data.data()['timestamp'];
   }
 }

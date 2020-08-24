@@ -23,7 +23,7 @@ class _LoginState extends State<Login> {
   SharedPreferences sharedPreferences;
   bool isLoading = false;
   bool isLoggedIn = false;
-  FirebaseUser currentUser;
+  User currentUser;
 
   Future<Null> _handleSignIn() async {
     sharedPreferences = await SharedPreferences.getInstance();
@@ -34,30 +34,30 @@ class _LoginState extends State<Login> {
     GoogleSignInAccount googleUser = await googleSignIn.signIn();
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
+    final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    FirebaseUser firebaseUser =
+    User firebaseUser =
         (await firebaseAuth.signInWithCredential(credential)).user;
 
     if (firebaseUser != null) {
-      final QuerySnapshot result = await Firestore.instance
+      final QuerySnapshot result = await FirebaseFirestore.instance
           .collection('users')
           .where('id', isEqualTo: firebaseUser.uid)
-          .getDocuments();
+          .get();
 
-      final List<DocumentSnapshot> documents = result.documents;
+      final List<DocumentSnapshot> documents = result.docs;
       if (documents.length == 0) {
-        Firestore.instance
+        FirebaseFirestore.instance
             .collection('users')
-            .document(firebaseUser.uid)
-            .setData(
+            .doc(firebaseUser.uid)
+            .set(
           {
             'name': firebaseUser.displayName,
             'email': firebaseUser.email,
-            'photoUrl': firebaseUser.photoUrl,
+            'photoUrl': firebaseUser.photoURL,
             'id': firebaseUser.uid,
             'createdAt': DateTime.now().millisecondsSinceEpoch.toString(),
             'friends': [],
@@ -69,12 +69,14 @@ class _LoginState extends State<Login> {
         await sharedPreferences.setString('id', currentUser.uid);
         await sharedPreferences.setString('name', currentUser.displayName);
         await sharedPreferences.setString('email', currentUser.email);
-        await sharedPreferences.setString('photoUrl', currentUser.photoUrl);
+        await sharedPreferences.setString('photoUrl', currentUser.photoURL);
       } else {
-        await sharedPreferences.setString('id', documents[0]['id']);
-        await sharedPreferences.setString('name', documents[0]['name']);
-        await sharedPreferences.setString('email', documents[0]['email']);
-        await sharedPreferences.setString('photoUrl', documents[0]['photoUrl']);
+        await sharedPreferences.setString('id', documents[0].data()['id']);
+        await sharedPreferences.setString('name', documents[0].data()['name']);
+        await sharedPreferences.setString(
+            'email', documents[0].data()['email']);
+        await sharedPreferences.setString(
+            'photoUrl', documents[0].data()['photoUrl']);
       }
       String name = sharedPreferences.getString('name');
       Fluttertoast.showToast(msg: 'Welcome! $name');

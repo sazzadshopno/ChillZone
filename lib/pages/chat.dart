@@ -34,6 +34,11 @@ class _ChatState extends State<Chat> {
   });
   TextEditingController _textEditingController = TextEditingController();
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -48,9 +53,9 @@ class _ChatState extends State<Chat> {
           children: [
             Flexible(
               child: StreamBuilder(
-                stream: Firestore.instance
+                stream: FirebaseFirestore.instance
                     .collection('chat')
-                    .document(chatID)
+                    .doc(chatID)
                     .collection('messages')
                     .orderBy(
                       'timestamp',
@@ -114,9 +119,9 @@ class _ChatState extends State<Chat> {
                             String now = DateTime.now()
                                 .millisecondsSinceEpoch
                                 .toString();
-                            Firestore.instance
+                            FirebaseFirestore.instance
                                 .collection('chat')
-                                .document(chatID)
+                                .doc(chatID)
                                 .collection('messages')
                                 .add(
                               {
@@ -126,12 +131,12 @@ class _ChatState extends State<Chat> {
                                 'timestamp': now,
                               },
                             );
-                            Firestore.instance
+                            FirebaseFirestore.instance
                                 .collection('users')
-                                .document(senderUserId)
+                                .doc(senderUserId)
                                 .collection('chattingWith')
-                                .document(chatID)
-                                .updateData(
+                                .doc(chatID)
+                                .update(
                               {
                                 'senderid': senderUserId,
                                 'receiverid': receiverId,
@@ -139,12 +144,12 @@ class _ChatState extends State<Chat> {
                                 'timestamp': now,
                               },
                             );
-                            Firestore.instance
+                            FirebaseFirestore.instance
                                 .collection('users')
-                                .document(receiverId)
+                                .doc(receiverId)
                                 .collection('chattingWith')
-                                .document(chatID)
-                                .updateData(
+                                .doc(chatID)
+                                .update(
                               {
                                 'senderid': senderUserId,
                                 'receiverid': receiverId,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:chillzone/pages/showProfile.dart';
-import 'package:chillzone/model/user.dart';
+import 'package:chillzone/model/chat_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,7 +56,7 @@ class SearchFriend extends SearchDelegate<String> {
     return query.isEmpty
         ? Container()
         : StreamBuilder(
-            stream: Firestore.instance.collection('users').snapshots(),
+            stream: FirebaseFirestore.instance.collection('users').snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Center(
@@ -66,13 +66,14 @@ class SearchFriend extends SearchDelegate<String> {
                 );
               }
               final data = snapshot.data.documents;
-              List<User> users = [];
+              List<ChatUser> users = [];
               for (var d in data) {
                 String name = d['name'];
                 String userID = d['id'];
-                if (name.toLowerCase().startsWith(query.toLowerCase()) && userID != this.id) {
+                if (name.toLowerCase().startsWith(query.toLowerCase()) &&
+                    userID != this.id) {
                   users.add(
-                    User.fromJSON(d),
+                    ChatUser.fromJSON(d),
                   );
                 }
               }
@@ -90,13 +91,15 @@ class SearchFriend extends SearchDelegate<String> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           onTap: () async {
-                            SharedPreferences preferences = await SharedPreferences.getInstance();
+                            SharedPreferences preferences =
+                                await SharedPreferences.getInstance();
                             String currentUserId = preferences.getString('id');
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    ShowProfile(user: users[index], currentUserId: currentUserId),
+                                builder: (context) => ShowProfile(
+                                    user: users[index],
+                                    currentUserId: currentUserId),
                               ),
                             );
                           },

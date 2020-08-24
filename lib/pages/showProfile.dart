@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:chillzone/model/user.dart';
+import 'package:chillzone/model/chat_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:chillzone/util/setOneToOneCode.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class ShowProfile extends StatefulWidget {
-  final User user;
+  final ChatUser user;
   final String currentUserId;
   ShowProfile({@required this.user, @required this.currentUserId});
   @override
@@ -14,7 +15,7 @@ class ShowProfile extends StatefulWidget {
 }
 
 class _ShowProfileState extends State<ShowProfile> {
-  final User user;
+  final ChatUser user;
   final String currentUserId;
   bool isFriend = false;
   bool issentRequests = false;
@@ -23,7 +24,7 @@ class _ShowProfileState extends State<ShowProfile> {
 
   void removeData(
       String collectionID, String documentID, String field, String data) {
-    Firestore.instance.collection(collectionID).document(documentID).updateData(
+    FirebaseFirestore.instance.collection(collectionID).doc(documentID).update(
       {
         field: FieldValue.arrayRemove(
           [data],
@@ -34,7 +35,7 @@ class _ShowProfileState extends State<ShowProfile> {
 
   void addData(
       String collectionID, String documentID, String field, String data) {
-    Firestore.instance.collection(collectionID).document(documentID).updateData(
+    FirebaseFirestore.instance.collection(collectionID).doc(documentID).update(
       {
         field: FieldValue.arrayUnion(
           [data],
@@ -47,17 +48,17 @@ class _ShowProfileState extends State<ShowProfile> {
     removeData('users', currentUserId, 'friends', user.id);
     removeData('users', user.id, 'friends', currentUserId);
     String chatID = oneTooneCode(user.id, currentUserId);
-    Firestore.instance
+    FirebaseFirestore.instance
         .collection('users')
-        .document(currentUserId)
+        .doc(currentUserId)
         .collection('chattingWith')
-        .document(chatID)
+        .doc(chatID)
         .delete();
-    Firestore.instance
+    FirebaseFirestore.instance
         .collection('users')
-        .document(user.id)
+        .doc(user.id)
         .collection('chattingWith')
-        .document(chatID)
+        .doc(chatID)
         .delete();
 
     Fluttertoast.showToast(msg: 'Removed from friend list.');
@@ -70,12 +71,12 @@ class _ShowProfileState extends State<ShowProfile> {
     addData('users', user.id, 'friends', currentUserId);
     String chatID = oneTooneCode(user.id, currentUserId);
     String now = DateTime.now().millisecondsSinceEpoch.toString();
-    Firestore.instance
+    FirebaseFirestore.instance
         .collection('users')
-        .document(currentUserId)
+        .doc(currentUserId)
         .collection('chattingWith')
-        .document(chatID)
-        .setData(
+        .doc(chatID)
+        .set(
       {
         'chatID': chatID,
         'message': '',
@@ -83,12 +84,12 @@ class _ShowProfileState extends State<ShowProfile> {
         'timestamp': now,
       },
     );
-    Firestore.instance
+    FirebaseFirestore.instance
         .collection('users')
-        .document(user.id)
+        .doc(user.id)
         .collection('chattingWith')
-        .document(chatID)
-        .setData(
+        .doc(chatID)
+        .set(
       {
         'chatID': chatID,
         'message': '',
@@ -118,6 +119,14 @@ class _ShowProfileState extends State<ShowProfile> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    Firebase.initializeApp().whenComplete(() {
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -133,9 +142,9 @@ class _ShowProfileState extends State<ShowProfile> {
               child: Text(user.name),
             ),
             StreamBuilder(
-              stream: Firestore.instance
+              stream: FirebaseFirestore.instance
                   .collection('users')
-                  .document(currentUserId)
+                  .doc(currentUserId)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -144,9 +153,9 @@ class _ShowProfileState extends State<ShowProfile> {
                   );
                 }
                 DocumentSnapshot docs = snapshot.data;
-                List<dynamic> friends = docs['friends'];
-                List<dynamic> sentRequests = docs['sentRequests'];
-                List<dynamic> requests = docs['requests'];
+                List<dynamic> friends = docs.data()['friends'];
+                List<dynamic> sentRequests = docs.data()['sentRequests'];
+                List<dynamic> requests = docs.data()['requests'];
 
                 isFriend = friends.isNotEmpty && friends.contains(user.id);
                 issentRequests =
